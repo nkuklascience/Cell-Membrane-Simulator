@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modeling Cell Membrane Transport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6fa;--card:#fff;--ink:#1b2433;--muted:#5b6678;--line:#dde3ec;
+  --accent:#0e7c86;--accent-d:#0b5f67;--accent-soft:#e3f4f5;
+  --good:#15803d;--good-bg:#dcfce7;--bad:#b91c1c;--bad-bg:#fee2e2;
+  --warn-bg:#fff4d6;--info-bg:#eaf2ff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Lexend,system-ui,sans-serif;font-weight:300;background:var(--bg);color:var(--ink);line-height:1.55;font-size:16px}
+b,strong{font-weight:600}
+h1,h2,h3{font-family:Fredoka,Lexend,sans-serif;font-weight:600;line-height:1.2;margin:0}
+button{font:inherit}
+header.top{background:linear-gradient(120deg,#0e7c86 0%,#155e75 60%,#1e3a5f 100%);color:#fff;padding:20px 24px 18px}
+.top-inner{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between}
+.top h1{font-size:28px;letter-spacing:.2px}
+.top .sub{opacity:.85;font-size:14px;margin-top:2px}
+.top-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top-tools label{font-size:13px;opacity:.9}
+.top-tools input{border:0;border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;width:190px;color:var(--ink)}
+.hbtn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:500;font-size:14px}
+.hbtn:hover{background:rgba(255,255,255,.24)}
+nav.tabs{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 6px rgb(16 24 40 / 5%)}
+.tabs-inner{max-width:1080px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:10px 16px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;white-space:nowrap;cursor:pointer;color:var(--ink);font-weight:400;display:flex;gap:6px;align-items:center}
+.tab:hover{border-color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab .tick{display:none;width:18px;height:18px;border-radius:50%;background:var(--good);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.tab.done .tick{display:inline-block}
+main{max-width:1080px;margin:0 auto;padding:12px 16px 90px}
+section.part{display:none}
+section.part.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0;box-shadow:0 1px 2px rgb(16 24 40 / 4%)}
+.card h2{font-size:24px;margin-bottom:6px}
+.card h3{font-size:19px;margin:4px 0 8px;display:flex;align-items:center;gap:10px}
+.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600}
+.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);font-family:Fredoka;font-size:15px;flex:none}
+.muted{color:var(--muted)}
+.lead{font-size:16.5px}
+.callout{background:var(--accent-soft);border-left:4px solid var(--accent);padding:10px 14px;border-radius:8px;margin:10px 0}
+.term{font-weight:600;color:var(--accent-d)}
+/* concept map */
+.cmap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.cmap .root{grid-column:1/-1;text-align:center;font-weight:600;background:#f1f5f9;border-radius:10px;padding:8px}
+.cbox{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.cbox.passive{border-color:#7cc6cc;background:#f2fbfb}
+.cbox.active{border-color:#f4a26a;background:#fff6ef}
+.cbox .t{font-weight:600}
+.cbox .s{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px}
+/* setup */
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px;min-height:40px;padding:10px;border:2px dashed var(--line);border-radius:12px;background:#fafbfd}
+.lbl{border:1.5px solid #94a3b8;background:#fff;border-radius:999px;padding:6px 14px;cursor:grab;font-size:14px;font-weight:500;user-select:none}
+.lbl.sel{border-color:var(--accent);background:var(--accent);color:#fff}
+.lbl.vessel{border-color:#e26d8a;background:#fde4ea}
+.lbl.vessel.sel{background:#e26d8a;color:#fff}
+.bank-empty{color:var(--muted);font-size:14px;align-self:center}
+.setup-svg,.sim svg{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line);background:#fff}
+.zone{fill:rgba(255,255,255,.01);stroke:#64748b;stroke-width:1.5;stroke-dasharray:6 5;cursor:pointer;transition:fill .15s}
+.zone:hover,.zone.over{fill:rgba(14,124,134,.12);stroke:var(--accent)}
+.zones-armed .zone{stroke:var(--accent);stroke-width:2.2}
+.pill{cursor:pointer}
+.stamp{display:none;margin-top:12px;align-items:center;gap:12px;background:var(--good-bg);border:2px solid var(--good);color:var(--good);border-radius:12px;padding:10px 16px;font-weight:600}
+.stamp.show{display:flex}
+.stamp .big{font-family:Fredoka;font-size:22px}
+/* sims */
+.sim{margin-top:10px}
+.sim-main{display:grid;grid-template-columns:1fr 178px;gap:14px;align-items:start}
+@media(max-width:760px){.sim-main{grid-template-columns:1fr}}
+.meter{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.m-title{font-weight:600;margin-bottom:6px}
+.m-row{display:flex;justify-content:space-between;margin-top:8px}
+.m-row b{font-family:Fredoka;font-size:22px;line-height:1}
+.bar{height:10px;background:#e5e9f0;border-radius:6px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:6px;transition:width .4s}
+.bar.out i{background:#38bdf8}.bar.in i{background:#fb923c}
+.m-note{margin-top:12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.m-note .eq{color:var(--good);font-weight:600}
+.sim-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink)}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--accent-d)}
+.btn.energy{background:#fde047;border-color:#eab308;color:#713f12}
+.btn.ghost{color:var(--muted)}
+.btn.danger{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.btn.on{outline:3px solid #0e7c8655}
+.sim-msg{margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--info-bg);font-size:15px;min-height:44px}
+.sim-msg.warn{background:var(--warn-bg)}
+.sim-msg.good{background:var(--good-bg)}
+.snaps{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:560px){.snaps{grid-template-columns:1fr}}
+figure{margin:0}
+figcaption{font-weight:600;font-size:14px;margin-bottom:6px}
+.snap svg{pointer-events:none}
+.snap-empty{aspect-ratio:800/430;border:2px dashed var(--line);border-radius:12px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:14px}
+.mol{cursor:pointer;outline:none}
+.mol:hover .hit{fill:rgba(15,23,42,.07)}
+.mol:focus-visible .hit{stroke:#0f172a;stroke-width:2;stroke-dasharray:3 3}
+.protein.pop{animation:pop .55s cubic-bezier(.3,1.4,.6,1)}
+@keyframes pop{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:none}}
+.energized{filter:drop-shadow(0 0 7px #facc15)}
+.fx{font-family:Fredoka,system-ui,sans-serif;font-weight:600;animation:fxup 1s ease forwards}
+@keyframes fxup{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-14px)}}
+/* questions */
+.qs{margin-top:6px}
+.q{padding:12px 0;border-top:1px dashed var(--line)}
+.q:first-child{border-top:0}
+.q-text{font-weight:500}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.opt{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 16px;cursor:pointer;font-size:15px;color:var(--ink)}
+.opt:hover{border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel.right{border-color:var(--good);background:var(--good-bg)}
+.opt.sel.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.fb{font-size:14px;margin-top:6px}
+.fb.right{color:var(--good)}.fb.wrong{color:var(--bad)}
+.q input[type=text],.q input[type=number],.co2form input{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;font-size:15px;margin-top:6px}
+.q input[type=number],.co2form input{width:90px}
+.q input.right{border-color:var(--good);background:var(--good-bg)}
+.q input.wrong{border-color:var(--bad);background:var(--bad-bg)}
+textarea{width:100%;min-height:84px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;margin-top:8px;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:2px solid #0e7c8655;border-color:var(--accent)}
+.hint-btn{background:none;border:0;color:var(--accent-d);cursor:pointer;font-size:14px;padding:4px 0;font-weight:500}
+.hint{display:none;background:var(--warn-bg);padding:8px 12px;border-radius:8px;font-size:14px;margin-top:4px}
+.hint.show{display:block}
+.co2form{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:8px 0}
+.co2form label{font-weight:500}
+/* table */
+.tbl-wrap{overflow-x:auto}
+table.concl{border-collapse:collapse;width:100%;min-width:860px;font-size:14px}
+.concl th{background:#f1f5f9;text-align:left;padding:10px;border:1px solid var(--line);font-weight:600;vertical-align:bottom}
+.concl td{border:1px solid var(--line);padding:8px;vertical-align:top}
+.concl td:first-child{font-weight:600;background:#fafbfd;width:110px}
+.concl input,.concl select,.concl textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;font-size:14px;margin:0;background:#fff}
+.concl textarea{min-height:64px}
+.concl select.right{border-color:var(--good);background:var(--good-bg)}
+.concl select.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.next-row{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;place-items:center;z-index:50;padding:16px}
+.modal.show{display:grid}
+.modal-box{background:#fff;border-radius:16px;max-width:680px;width:100%;max-height:90vh;overflow:auto;padding:20px 22px;box-shadow:0 20px 50px rgb(0 0 0 / 25%)}
+.modal-box h2{font-size:22px;margin-bottom:10px}
+.ref{border-collapse:collapse;width:100%;font-size:15px}
+.ref th,.ref td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+.ref th{background:#f1f5f9}
+.modal textarea{min-height:300px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;align-items:center}
+.copy-status{font-size:14px;color:var(--good);margin-right:auto}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <h1>Modeling Cell Membrane Transport</h1>
+      <div class="sub">Interactive simulator · Biology</div>
+    </div>
+    <div class="top-tools">
+      <label for="studentName">Name</label>
+      <input id="studentName" type="text" placeholder="Type your name" autocomplete="name">
+      <button class="hbtn" id="openRef">📖 Reference table</button>
+      <button class="hbtn" id="openReport">📋 Copy my answers</button>
+    </div>
+  </div>
+</header>
+<nav class="tabs" aria-label="Sections"><div class="tabs-inner" id="tabs"></div></nav>
+
+<main>
+<!-- SETUP -->
+<section class="part" id="setup" data-title="Setup">
+  <div class="card">
+    <div class="kicker">Background</div>
+    <h2>How do cells control what gets in and out?</h2>
+    <p class="lead">Every second, trillions of microscopic cells in your body are constantly working to keep you alive and healthy. To survive, your cells must carefully control what enters and exits across their <span class="term">cell membrane</span>, maintaining a balanced internal environment known as <span class="term">dynamic equilibrium</span>.</p>
+    <p>Small molecules like oxygen and carbon dioxide move freely into and out of cells from areas of high concentration to low concentration through <span class="term">diffusion</span>. Water also moves across membranes to balance solute concentrations through a specialized form of passive water movement called <span class="term">osmosis</span>. Because diffusion and osmosis require no energy from the cell, both are forms of <span class="term">passive transport</span>.</p>
+    <p>However, larger or charged particles—such as glucose—cannot pass directly through the fatty membrane on their own. Instead, they rely on <span class="term">facilitated diffusion</span>, using specialized protein channels to enter the cell from high to low concentration without consuming cellular energy. When cells need to push materials <em>against</em> their concentration gradient (from low to high concentration), they must use <span class="term">active transport</span>, which requires the cell to spend energy (ATP).</p>
+    <div class="cmap">
+      <div class="root">Movement across the cell membrane</div>
+      <div class="cbox passive"><div class="t">Passive transport</div><div class="s">High → Low · NO energy needed</div>
+        <div class="chips"><span class="chip">Diffusion</span><span class="chip">Osmosis</span><span class="chip">Facilitated diffusion</span></div></div>
+      <div class="cbox active"><div class="t">Active transport</div><div class="s">Low → High · ENERGY (ATP) needed</div>
+        <div class="chips"><span class="chip">Protein pump</span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">✎</span>Set up your cell membrane</h3>
+    <p>Here is your double phospholipid bilayer: <b style="color:#2563eb">blue heads</b> and <b style="color:#b98900">yellow tails</b>. Place each label card where it belongs on the model. <span class="muted">Tap a label, then tap the dashed box where it goes, or drag it there. Tap a placed label to take it back.</span></p>
+    <div class="bank" id="bank"></div>
+    <div id="setupStage"></div>
+    <div class="sim-controls">
+      <button class="btn primary" id="checkSetup">✔ Check my setup</button>
+      <button class="btn ghost" id="resetSetup">↺ Clear labels</button>
+    </div>
+    <div class="sim-msg" id="setupMsg">Place all 7 labels, then check your setup. (This replaces the teacher signature!)</div>
+    <div class="stamp" id="stamp"><span class="big">✓ Setup approved</span><span>Nice work! Your membrane is labeled and the blood vessel is bringing nutrients to the outside of the cell. Head to Part 1.</span></div>
+  </div>
+  <div class="next-row"><span></span><button class="btn primary" data-go="diffusion">Next: Part 1 →</button></div>
+</section>
+
+<!-- PART 1 -->
+<section class="part" id="diffusion" data-title="1 · Diffusion">
+  <div class="card">
+    <div class="kicker">Part 1</div>
+    <h2>Simple Diffusion (Oxygen &amp; Carbon Dioxide)</h2>
+    <h3><span class="num">1</span>Model setup</h3>
+    <p>Your model starts with <b>8 oxygen molecules outside</b> the cell and <b>2 inside</b>.</p>
+    <h3><span class="num">2</span>Properties <button class="btn ghost" data-ref style="margin-left:auto;font-size:13px;padding:5px 10px">📖 Reference table</button></h3>
+    <div class="qs" id="q-p1pre"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">3</span>Simulate movement</h3>
+    <p>Click oxygen molecules <b>one at a time</b> to move them across the membrane. Keep going until you reach <b>dynamic equilibrium</b>.</p>
+    <div id="sim-p1"></div>
+    <div class="qs" id="q-p1post" style="margin-top:14px"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">4</span>Carbon dioxide leaves the cell</h3>
+    <p>Carbon dioxide must move <b>out</b> of the cell by diffusion.</p>
+    <div class="qs" id="q-co2pre"></div>
+    <div class="callout"><b>YOU PICK THE NUMBERS.</b> There are 10 CO₂ molecules total. Remember that dynamic equilibrium is the goal, and CO₂ needs to move <em>out</em> of the cell.</div>
+    <div class="co2form">
+      <span>Before diffusion:</span>
+      <label><input type="number" id="co2in" min="0" max="10"> inside the cell</label>
+      <label><input type="number" id="co2out" min="0" max="10"> outside the cell</label>
+      <button class="btn primary" id="co2build">Build my model</button>
+    </div>
+    <div class="sim-msg" id="co2msg">Pick your numbers, then build your model.</div>
+    <div id="sim-co2"></div>
+    <div class="qs" id="q-co2post" style="margin-top:14px"></div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="setup">← Setup</button><button class="btn primary" data-go="osmosis">Next: Part 2 →</button></div>
+</section>
+
+<!-- PART 2 -->
+<section class="part" id="osmosis" data-title="2 · Osmosis">
+  <div class="card">
+    <div class="kicker">Part 2</div>
+    <h2>Osmosis: Water (H₂O)</h2>
+    <h3><span class="num">1</span>Model setup</h3>
+    <p>Your model starts with <b>10 water molecules outside</b> the cell and <b>3 inside</b>.</p>
+    <h3><span class="num">2</span>Properties <button class="btn ghost" data-ref style="margin-left:auto;font-size:13px;padding:5px 10px">📖 Reference table</button></h3>
+    <div class="qs" id="q-p2pre"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">3</span>Action</h3>
+    <p>A tiny amount of water can slip through the phospholipid bilayer directly, but its movement is limited by the hydrophobic interior. <b>Try clicking a water molecule first</b>, then <b>insert an Aquaporin</b> (passive water channel) into your membrane.</p>
+    <h3><span class="num">4</span>Simulate movement</h3>
+    <p>Move water molecules through the aquaporin from <b>high</b> water concentration to <b>low</b> water concentration until balanced.</p>
+    <div id="sim-p2"></div>
+    <div class="qs" id="q-p2post" style="margin-top:14px"></div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="diffusion">← Part 1</button><button class="btn primary" data-go="facilitated">Next: Part 3 →</button></div>
+</section>
+
+<!-- PART 3 -->
+<section class="part" id="facilitated" data-title="3 · Facilitated">
+  <div class="card">
+    <div class="kicker">Part 3</div>
+    <h2>Facilitated Diffusion (Glucose)</h2>
+    <h3><span class="num">1</span>Model setup</h3>
+    <p>Your model starts with <b>6 glucose molecules outside</b> the cell and <b>1 inside</b>.</p>
+    <h3><span class="num">2</span>Properties <button class="btn ghost" data-ref style="margin-left:auto;font-size:13px;padding:5px 10px">📖 Reference table</button></h3>
+    <div class="qs" id="q-p3pre"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">3</span>Action</h3>
+    <p>Glucose is too large to pass directly through the bilayer. <b>Try it</b>, then <b>place a Passive Transport Channel</b> into your bilayer.</p>
+    <h3><span class="num">4</span>Simulate movement</h3>
+    <p>Move glucose through the channel <b>down its concentration gradient</b> until equilibrium is reached.</p>
+    <div id="sim-p3"></div>
+    <div class="qs" id="q-p3post" style="margin-top:14px"></div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="osmosis">← Part 2</button><button class="btn primary" data-go="active">Next: Part 4 →</button></div>
+</section>
+
+<!-- PART 4 -->
+<section class="part" id="active" data-title="4 · Active">
+  <div class="card">
+    <div class="kicker">Part 4</div>
+    <h2>Active Transport: Sodium Ions (Na⁺) Against the Gradient</h2>
+    <h3><span class="num">1</span>Model setup</h3>
+    <p>Your model starts with <b>6 sodium ions outside</b> the cell and <b>3 inside</b>. Sodium is already at a <b>higher</b> concentration outside, but the cell needs to pump even <b>more</b> sodium OUT. That is the opposite direction of normal diffusion. We call this moving particles <b>“against the concentration gradient.”</b></p>
+    <h3><span class="num">2</span>Properties <button class="btn ghost" data-ref style="margin-left:auto;font-size:13px;padding:5px 10px">📖 Reference table</button></h3>
+    <p class="muted" style="margin:0">Na⁺ is a charged ion.</p>
+    <div class="qs" id="q-p4pre"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">3</span>Action</h3>
+    <p>Na⁺ needs to get out of the cell.</p>
+    <div class="qs" id="q-p4mid"></div>
+    <p>To move Na⁺ against its gradient (low to high), <b>insert the Active Transport Protein Pump</b> into your cell membrane.</p>
+    <h3><span class="num">4</span>Energy requirement</h3>
+    <p>Attach the <b>ATP energy lightning bolt ⚡</b> to the pump to operate it. Each ATP powers one trip. <b>Move 2 sodium ions from inside the cell to the outside</b> using ATP energy.</p>
+    <div id="sim-p4"></div>
+    <div class="qs" id="q-p4post" style="margin-top:14px"></div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="facilitated">← Part 3</button><button class="btn primary" data-go="conclusion">Next: Conclusion →</button></div>
+</section>
+
+<!-- CONCLUSION -->
+<section class="part" id="conclusion" data-title="Conclusion">
+  <div class="card">
+    <div class="kicker">Conclusion</div>
+    <h2>Compare the four types of transport</h2>
+    <p>Fill in the table using what you saw in the simulations. Dropdowns turn <span style="color:var(--good);font-weight:600">green</span> when they're right.</p>
+    <div class="tbl-wrap"><table class="concl" id="conclTable"></table></div>
+    <div class="sim-msg" id="conclMsg" style="margin-top:12px">Complete every row of the table.</div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="active">← Part 4</button><button class="btn primary" data-go="cf">Next: Cystic Fibrosis →</button></div>
+</section>
+
+<!-- CF -->
+<section class="part" id="cf" data-title="Cystic Fibrosis">
+  <div class="card">
+    <div class="kicker">Real-world connection</div>
+    <h2>Cystic Fibrosis</h2>
+    <p>The cells lining your lungs have a protein channel called <b>CFTR</b> that lets <b>chloride ions (Cl⁻)</b> leave the cell. Water follows the chloride out by osmosis, which keeps the mucus in your airways thin and watery. In people with <b>cystic fibrosis</b>, a gene mutation makes the CFTR protein the <b>wrong shape</b>.</p>
+    <p>Try moving chloride ions out of the cell with a <b>healthy</b> channel, then switch to a <b>misfolded</b> channel. Watch the mucus layer.</p>
+    <div id="sim-cf"></div>
+  </div>
+  <div class="card">
+    <h3><span class="num">?</span>Your explanation</h3>
+    <div class="qs" id="q-cf"></div>
+    <div class="callout" style="margin-top:14px">🎉 <b>Finished?</b> Click <b>📋 Copy my answers</b> at the top, then paste them into your assignment.</div>
+  </div>
+  <div class="next-row"><button class="btn" data-go="conclusion">← Conclusion</button><button class="btn primary" id="finishBtn">📋 Copy my answers</button></div>
+</section>
+</main>
+<footer>Your answers are saved in this browser as you work. When you're done, use “Copy my answers” and paste them into your assignment.</footer>
+
+<div class="modal" id="refModal" role="dialog" aria-modal="true" aria-labelledby="refTitle">
+  <div class="modal-box">
+    <h2 id="refTitle">📖 Reference Table</h2>
+    <table class="ref">
+      <tr><th>Particle</th><th>Size</th><th>Polarity</th><th>Can it cross the bilayer on its own?</th></tr>
+      <tr><td>Oxygen (O₂)</td><td>Small</td><td>Nonpolar</td><td>Yes</td></tr>
+      <tr><td>Carbon dioxide (CO₂)</td><td>Small</td><td>Nonpolar</td><td>Yes</td></tr>
+      <tr><td>Water (H₂O)</td><td>Small</td><td>Polar</td><td>Only a trickle. Needs aquaporins to move quickly</td></tr>
+      <tr><td>Glucose (C₆H₁₂O₆)</td><td>Large</td><td>Polar</td><td>No. Needs a channel/carrier protein</td></tr>
+      <tr><td>Sodium ion (Na⁺)</td><td>Small</td><td>Charged (polar)</td><td>No. Needs a protein</td></tr>
+      <tr><td>Chloride ion (Cl⁻)</td><td>Small</td><td>Charged (polar)</td><td>No. Needs a protein</td></tr>
+    </table>
+    <p class="muted" style="font-size:14px">Rule of thumb: the middle of the bilayer is made of <b>nonpolar, hydrophobic tails</b>. Small nonpolar molecules slip right through. Polar, charged, or large particles get blocked and need a protein.</p>
+    <div class="modal-actions"><button class="btn primary" data-close>Close</button></div>
+  </div>
+</div>
+
+<div class="modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="repTitle">
+  <div class="modal-box">
+    <h2 id="repTitle">📋 Copy my answers</h2>
+    <p class="muted" style="margin-top:0">Copy this and paste it into your assignment (Google Classroom, a doc, etc.).</p>
+    <textarea id="reportText" readonly></textarea>
+    <div class="modal-actions"><span class="copy-status" id="copyStatus"></span><button class="btn" data-close>Close</button><button class="btn primary" id="copyBtn">Copy to clipboard</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in (attrs||{}))e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,attrs){const t=el('text',Object.assign({x:x,y:y},attrs||{}),parent);t.textContent=s;return t;}
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+
+/* ---------- state ---------- */
+const KEY='membrane-transport-sim-v1';
+let STATE={name:'',a:{},setup:{},setupChecked:false,setupOK:false,done:{},co2:{in:'',out:''}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==='object')STATE=Object.assign(STATE,s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(STATE));}catch(e){}}
+
+/* ---------- geometry ---------- */
+const W=800,H=430,MT=185,MB=265,CX=400;
+const REG={out:{x0:36,x1:764,y0:66,y1:160},in:{x0:36,x1:764,y0:292,y1:400}};
+const SPECIES={
+  o2:{label:'O₂',name:'Oxygen',color:'#e5484d',stroke:'#9b1c1f',shape:'pair'},
+  co2:{label:'CO₂',name:'Carbon dioxide',color:'#475569',stroke:'#1e293b',shape:'triple'},
+  h2o:{label:'H₂O',name:'Water',color:'#2f9be0',stroke:'#0c5c94',shape:'water'},
+  glu:{label:'Glucose',name:'Glucose',color:'#f59f00',stroke:'#a15c00',shape:'hex'},
+  na:{label:'Na⁺',name:'Sodium ion',color:'#8e4ec6',stroke:'#5b2a86',shape:'ion'},
+  cl:{label:'Cl⁻',name:'Chloride ion',color:'#12a594',stroke:'#0b6b60',shape:'ion'}
+};
+
+function drawBackdrop(g,o){
+  o=o||{};
+  el('rect',{x:0,y:0,width:W,height:MT,fill:'#e2f3f6'},g);
+  el('rect',{x:0,y:MB,width:W,height:H-MB,fill:'#fdf0e3'},g);
+  if(o.vessel!==false) drawVessel(g);
+  if(o.labels!==false){
+    txt(g,784,o.vessel===false?28:58,o.outLabel||'OUTSIDE THE CELL',{'text-anchor':'end','font-size':12,'font-weight':600,fill:'#0b6b75','letter-spacing':'1.5','font-family':'Lexend,system-ui,sans-serif'});
+    txt(g,784,421,'INSIDE THE CELL (cytoplasm)',{'text-anchor':'end','font-size':12,'font-weight':600,fill:'#a0521b','letter-spacing':'1.5','font-family':'Lexend,system-ui,sans-serif'});
+  }
+}
+function drawVessel(g){
+  const v=el('g',{},g);
+  el('rect',{x:-20,y:6,width:W+40,height:32,rx:16,fill:'#f9b4c3',stroke:'#e26d8a','stroke-width':2},v);
+  for(let x=150;x<W;x+=70){el('ellipse',{cx:x+(x%140?10:0),cy:22,rx:13,ry:8,fill:'#e0435f',opacity:.75},v);}
+  txt(v,18,27,'Blood vessel',{'font-size':13,'font-weight':600,fill:'#8f1d3b','font-family':'Lexend,system-ui,sans-serif'});
+}
+function drawMembrane(g,gap){
+  g.innerHTML='';
+  el('rect',{x:0,y:MT,width:W,height:MB-MT,fill:'#fffaeb'},g);
+  for(let x=10;x<W;x+=20){
+    if(gap&&x>gap[0]-4&&x<gap[1]+4)continue;
+    [[MT+8,1],[MB-8,-1]].forEach(function(p){
+      const hy=p[0],dir=p[1];
+      [-3.5,3.5].forEach(function(dx){
+        const y0=hy+dir*7,y1=hy+dir*33;
+        el('path',{d:'M'+(x+dx)+' '+y0+' Q '+(x+dx*1.8)+' '+((y0+y1)/2)+' '+(x+dx)+' '+y1,stroke:'#e9b308','stroke-width':3,fill:'none','stroke-linecap':'round'},g);
+      });
+      el('circle',{cx:x,cy:hy,r:8,fill:'#3b82f6',stroke:'#1d4ed8','stroke-width':1.2},g);
+    });
+  }
+}
+function plabel(g,s,color,y){
+  txt(g,CX,y,s,{'text-anchor':'middle','font-size':13,'font-weight':600,fill:color,stroke:'#fff','stroke-width':4,'paint-order':'stroke','font-family':'Lexend,system-ui,sans-serif'});
+}
+function drawProtein(g,type,st){
+  g.innerHTML='';if(!type)return;st=st||{};
+  const top=MT-14,bot=MB+14,h=bot-top;
+  const pg=el('g',{class:'protein'+(st.anim?' pop':'')},g);
+  const blocks=function(a1,a2,b1,b2,fill,stroke){
+    el('rect',{x:a1,y:top,width:a2-a1,height:h,rx:13,fill:fill,stroke:stroke,'stroke-width':2},pg);
+    el('rect',{x:b1,y:top,width:b2-b1,height:h,rx:13,fill:fill,stroke:stroke,'stroke-width':2},pg);
+  };
+  if(type==='aquaporin'){blocks(360,393,407,440,'#5eead4','#0f766e');plabel(pg,'Aquaporin','#0f766e',top-6);}
+  else if(type==='glucose'){blocks(354,383,417,446,'#d8b4fe','#7e22ce');plabel(pg,'Glucose channel (passive)','#6b21a8',top-6);}
+  else if(type==='cftr'){blocks(358,388,412,442,'#86efac','#15803d');plabel(pg,'Healthy CFTR channel','#15803d',bot+18);}
+  else if(type==='cftrBad'){
+    el('path',{d:'M356 '+top+' q 18 -6 40 30 q 14 30 -6 60 q -14 20 -8 '+(h-90)+' l -26 0 z',fill:'#fecaca',stroke:'#b91c1c','stroke-width':2},pg);
+    el('path',{d:'M444 '+top+' q -30 4 -44 40 q -12 28 10 52 q 12 18 6 '+(h-92)+' l 28 0 z',fill:'#fecaca',stroke:'#b91c1c','stroke-width':2},pg);
+    plabel(pg,'Misfolded CFTR (wrong shape)','#b91c1c',bot+18);
+  }
+  else if(type==='pump'){
+    const pump=el('g',{class:st.atp?'energized':''},pg);
+    el('rect',{x:350,y:top-6,width:100,height:h+12,rx:24,fill:'#fdba74',stroke:'#c2410c','stroke-width':2.5},pump);
+    el('rect',{x:391,y:top+8,width:18,height:h-16,rx:9,fill:'#fff1e6',stroke:'#c2410c','stroke-width':1.2},pump);
+    el('circle',{cx:468,cy:MB+6,r:15,fill:st.atp?'#fef08a':'#fff','stroke':st.atp?'#ca8a04':'#c2410c','stroke-width':2,'stroke-dasharray':st.atp?'0':'4 3'},pg);
+    if(st.atp){el('polygon',{points:'470,'+(MB-6)+' 461,'+(MB+8)+' 467,'+(MB+8)+' 464,'+(MB+19)+' 475,'+(MB+3)+' 469,'+(MB+3),fill:'#facc15',stroke:'#854d0e','stroke-width':1.2},pg);}
+    else{txt(pg,468,MB+10,'ATP',{'text-anchor':'middle','font-size':9,'font-weight':600,fill:'#c2410c','font-family':'Lexend,system-ui,sans-serif'});}
+    plabel(pg,'Na⁺ pump (active transport)','#c2410c',top-12);
+  }
+}
+function drawMol(parent,key,s){
+  s=s||1;const sp=SPECIES[key];const g=el('g',{},parent);
+  const T=function(x,y,str,fs,fill){txt(g,x,y,str,{'text-anchor':'middle','dominant-baseline':'central','font-size':fs,'font-weight':600,fill:fill||'#fff','font-family':'Lexend,system-ui,sans-serif','pointer-events':'none'});};
+  if(sp.shape==='pair'){
+    el('circle',{cx:-7*s,cy:0,r:10*s,fill:sp.color,stroke:sp.stroke,'stroke-width':1.5},g);
+    el('circle',{cx:7*s,cy:0,r:10*s,fill:sp.color,stroke:sp.stroke,'stroke-width':1.5},g);
+    T(0,0,'O₂',10*s);
+  }else if(sp.shape==='triple'){
+    el('circle',{cx:-14*s,cy:0,r:8*s,fill:'#e5484d',stroke:'#9b1c1f','stroke-width':1.3},g);
+    el('circle',{cx:14*s,cy:0,r:8*s,fill:'#e5484d',stroke:'#9b1c1f','stroke-width':1.3},g);
+    el('circle',{cx:0,cy:0,r:9.5*s,fill:sp.color,stroke:sp.stroke,'stroke-width':1.5},g);
+    T(0,0,'C',10*s);
+  }else if(sp.shape==='water'){
+    el('circle',{cx:-9*s,cy:-8*s,r:5.5*s,fill:'#fff',stroke:sp.stroke,'stroke-width':1.3},g);
+    el('circle',{cx:9*s,cy:-8*s,r:5.5*s,fill:'#fff',stroke:sp.stroke,'stroke-width':1.3},g);
+    el('circle',{cx:0,cy:1*s,r:10.5*s,fill:sp.color,stroke:sp.stroke,'stroke-width':1.5},g);
+    T(0,1*s,'O',10*s);
+  }else if(sp.shape==='hex'){
+    const r=17*s,pts=[];for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;pts.push((r*Math.cos(a)).toFixed(1)+','+(r*Math.sin(a)).toFixed(1));}
+    el('polygon',{points:pts.join(' '),fill:sp.color,stroke:sp.stroke,'stroke-width':1.6},g);
+    T(0,0,'G',12*s);
+  }else{
+    el('circle',{cx:0,cy:0,r:13*s,fill:sp.color,stroke:sp.stroke,'stroke-width':1.6},g);
+    T(0,0,sp.label,10*s);
+  }
+  return g;
+}
+function mkAnim(pts,dur,done){const lens=[];let L=0;for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);lens.push(l);L+=l;}return{pts:pts,lens:lens,L:L||1,dur:dur,done:done,t0:performance.now()};}
+function along(a,p){let d=p*a.L;for(let i=0;i<a.lens.length;i++){if(d<=a.lens[i]||i===a.lens.length-1){const f=a.lens[i]?Math.min(1,d/a.lens[i]):1;const A=a.pts[i],B=a.pts[i+1];return[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f];}d-=a.lens[i];}return a.pts[a.pts.length-1];}
+const sideName=s=>s==='out'?'outside the cell':'inside the cell';
+
+/* ---------- simulator ---------- */
+const SIMS=[];
+function Sim(host,cfg){
+  this.host=host;this.cfg=cfg;host.classList.add('sim');
+  host.innerHTML='<div class="sim-main"><div class="sim-stage"></div><div class="meter"></div></div><div class="sim-controls"></div><div class="sim-msg" role="status" aria-live="polite"></div>'+
+   '<div class="snaps"><figure><figcaption>'+cfg.beforeTitle+'</figcaption><div class="snap snap-before"></div></figure><figure><figcaption>'+cfg.afterTitle+'</figcaption><div class="snap snap-after"></div></figure></div>';
+  this.svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':cfg.aria||'Cell membrane simulation'},host.querySelector('.sim-stage'));
+  this.meter=host.querySelector('.meter');this.ctrl=host.querySelector('.sim-controls');this.msg=host.querySelector('.sim-msg');
+  this.snapB=host.querySelector('.snap-before');this.snapA=host.querySelector('.snap-after');
+  SIMS.push(this);this.reset();
+}
+Sim.prototype.visible=function(){return this.host.offsetParent!==null;};
+Sim.prototype.counts=function(){const c={out:0,in:0};this.mols.forEach(m=>c[m.side]++);return c;};
+Sim.prototype.atEq=function(){const c=this.counts();return Math.abs(c.out-c.in)<=1;};
+Sim.prototype.L=function(){return SPECIES[this.cfg.species].label;};
+Sim.prototype.reset=function(){
+  clearInterval(this.swapT);this.swapT=null;
+  const cfg=this.cfg;this.protein=cfg.proteinStart||null;this.atp=false;this.pumped=0;this.done=false;
+  this.svg.innerHTML='';
+  this.bgG=el('g',{},this.svg);drawBackdrop(this.bgG,{vessel:cfg.vessel!==false,outLabel:cfg.outLabel});
+  this.extraG=el('g',{},this.svg);this.memG=el('g',{},this.svg);this.protG=el('g',{},this.svg);
+  this.molG=el('g',{},this.svg);this.fxG=el('g',{},this.svg);
+  this.drawMem(false);
+  this.mols=[];this.spawn('out',cfg.out);this.spawn('in',cfg.in);
+  this.mols.forEach(m=>m.g.setAttribute('transform','translate('+m.hx.toFixed(1)+','+m.hy.toFixed(1)+')'));
+  if(cfg.onDraw)cfg.onDraw(this);
+  this.renderControls();this.updateMeter();
+  this.snapB.innerHTML='';this.snapB.appendChild(this.snapshot());
+  this.snapA.innerHTML='<div class="snap-empty">Finish the simulation to capture the “after” picture.</div>';
+  this.say(cfg.intro,'info');
+};
+Sim.prototype.drawMem=function(anim){
+  drawMembrane(this.memG,this.protein?[348,452]:null);
+  drawProtein(this.protG,this.protein,{atp:this.atp,anim:anim});
+};
+Sim.prototype.spawn=function(side,n){
+  const r=REG[side];
+  for(let i=0;i<n;i++){
+    let best=null;
+    for(let k=0;k<60;k++){
+      const p=[rand(r.x0,r.x1),rand(r.y0,r.y1)];
+      const ok=this.mols.every(m=>Math.hypot(m.hx-p[0],m.hy-p[1])>46);
+      best=p;if(ok)break;
+    }
+    this.addMol(side,best[0],best[1]);
+  }
+};
+Sim.prototype.addMol=function(side,x,y){
+  const self=this,sp=SPECIES[this.cfg.species];
+  const g=el('g',{class:'mol',tabindex:0,role:'button','aria-label':sp.name+' '+sideName(side)},this.molG);
+  el('circle',{r:22,fill:'transparent',class:'hit'},g);
+  drawMol(g,this.cfg.species);
+  const m={side:side,hx:x,hy:y,x:x,y:y,vx:rand(-.25,.25),vy:rand(-.16,.16),ph:rand(0,6.28),g:g,anim:null};
+  g.addEventListener('click',function(){self.handle(m);});
+  g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();self.handle(m);}});
+  this.mols.push(m);
+};
+Sim.prototype.step=function(now){
+  for(const m of this.mols){
+    if(m.anim){
+      const a=m.anim;let t=(now-a.t0)/a.dur;if(t>1)t=1;
+      const p=along(a,ease(t));m.x=p[0];m.y=p[1];
+      if(t>=1){m.anim=null;m.hx=m.x;m.hy=m.y;if(a.done)a.done();}
+    }else{
+      const r=REG[m.side];m.hx+=m.vx;m.hy+=m.vy;
+      if(m.hx<r.x0||m.hx>r.x1){m.vx*=-1;m.hx=clamp(m.hx,r.x0,r.x1);}
+      if(m.hy<r.y0||m.hy>r.y1){m.vy*=-1;m.hy=clamp(m.hy,r.y0,r.y1);}
+      if(Math.random()<.008){m.vx=rand(-.25,.25);m.vy=rand(-.16,.16);}
+      m.x=m.hx+Math.sin(now/380+m.ph)*1.8;m.y=m.hy+Math.cos(now/450+m.ph)*1.8;
+    }
+    m.g.setAttribute('transform','translate('+m.x.toFixed(1)+','+m.y.toFixed(1)+')');
+  }
+};
+Sim.prototype.say=function(msg,type){this.msg.className='sim-msg '+(type||'info');this.msg.innerHTML=msg||'';};
+Sim.prototype.fx=function(x,y,s,color){const t=txt(this.fxG,x,y,s,{'text-anchor':'middle','font-size':20,fill:color||'#dc2626',class:'fx'});setTimeout(()=>t.remove(),1000);};
+Sim.prototype.handle=function(m){
+  if(m.anim)return;
+  const r=this.cfg.rule(m,this);
+  if(r.action==='cross'){
+    if(this.cfg.onCross)this.cfg.onCross(this,m);
+    this.cross(m,r.via);
+    this.afterMove(r.msg);
+  }else if(r.action==='bounce'){this.bounce(m,r.at);this.say(r.msg,r.type||'warn');}
+  else{this.shake(m);this.say(r.msg,r.type||'warn');}
+};
+Sim.prototype.cross=function(m,via){
+  const from=m.side,to=from==='out'?'in':'out';m.side=to;
+  m.g.setAttribute('aria-label',SPECIES[this.cfg.species].name+' '+sideName(to));
+  const r=REG[to];const nearX=via==='protein'?CX:m.x;
+  const tgt=[clamp(nearX+rand(-150,150),r.x0,r.x1),rand(r.y0,r.y1)];
+  let pts;
+  if(via==='protein'){
+    const m1=from==='out'?MT-24:MB+24,m2=from==='out'?MB+24:MT-24;
+    pts=[[m.x,m.y],[CX,m1],[CX,m2],tgt];
+  }else{
+    const dx=tgt[0]-m.x;
+    pts=[[m.x,m.y],[m.x+dx*.3,from==='out'?MT-4:MB+4],[m.x+dx*.6,from==='out'?MB+4:MT-4],tgt];
+  }
+  m.anim=mkAnim(pts,via==='protein'?1400:1150,null);
+};
+Sim.prototype.bounce=function(m,at){
+  const from=m.side,x=at==='protein'?CX:m.x;
+  const y=from==='out'?(at==='protein'?MT-22:MT-10):(at==='protein'?MB+22:MB+10);
+  m.anim=mkAnim([[m.x,m.y],[x,y],[m.x,m.y]],950,null);
+  this.fx(x,from==='out'?y-16:y+26,'✕');
+};
+Sim.prototype.shake=function(m){const x=m.x,y=m.y;m.anim=mkAnim([[x,y],[x-7,y],[x+7,y],[x-5,y],[x+4,y],[x,y]],380,null);};
+Sim.prototype.afterMove=function(moveMsg){
+  this.updateMeter();if(this.cfg.onDraw)this.cfg.onDraw(this);
+  if(!this.done&&this.cfg.goal&&this.cfg.goal(this)){
+    this.done=true;this.say(this.cfg.success(this),'good');markDone(this.cfg.id);this.captureAfter();
+  }else if(moveMsg){this.say(moveMsg,'info');}
+  else if(!this.done&&this.cfg.progress){this.say(this.cfg.progress(this),'info');}
+};
+Sim.prototype.captureAfter=function(){
+  const self=this;
+  const tryCap=function(n){
+    if(self.mols.some(m=>m.anim)&&n<40){setTimeout(()=>tryCap(n+1),150);return;}
+    self.snapA.innerHTML='';self.snapA.appendChild(self.snapshot());
+    if(self.cfg.dynamic)self.startSwaps();
+  };
+  setTimeout(()=>tryCap(0),200);
+};
+Sim.prototype.snapshot=function(){
+  const s=this.svg.cloneNode(true);
+  s.querySelectorAll('[tabindex]').forEach(n=>{n.removeAttribute('tabindex');n.removeAttribute('role');n.removeAttribute('aria-label');});
+  s.lastElementChild.innerHTML='';
+  s.querySelectorAll('.pop').forEach(n=>n.classList.remove('pop'));
+  const c=this.counts();
+  s.setAttribute('aria-label',this.L()+': '+c.out+' outside, '+c.in+' inside');
+  return s;
+};
+Sim.prototype.startSwaps=function(){
+  const self=this;clearInterval(this.swapT);
+  this.swapT=setInterval(function(){
+    if(!self.visible())return;
+    const pick=s=>{const c=self.mols.filter(m=>m.side===s&&!m.anim);return c[Math.floor(Math.random()*c.length)];};
+    const a=pick('out'),b=pick('in');if(!a||!b)return;
+    const via=self.protein?'protein':'bilayer';
+    self.cross(a,via);self.cross(b,via);
+  },3000);
+};
+Sim.prototype.updateMeter=function(){
+  const c=this.counts(),tot=(c.out+c.in)||1;
+  const note=this.cfg.meterNote?this.cfg.meterNote(this):(Math.abs(c.out-c.in)<=1?'<span class="eq">⚖️ Balanced: dynamic equilibrium</span>':'Gradient: <b>'+(c.out>c.in?'HIGH outside → LOW inside':'HIGH inside → LOW outside')+'</b>');
+  this.meter.innerHTML='<div class="m-title">'+this.L()+' count</div>'+
+   '<div class="m-row"><span>Outside</span><b>'+c.out+'</b></div><div class="bar out"><i style="width:'+(c.out/tot*100)+'%"></i></div>'+
+   '<div class="m-row"><span>Inside</span><b>'+c.in+'</b></div><div class="bar in"><i style="width:'+(c.in/tot*100)+'%"></i></div>'+
+   '<div class="m-note">'+note+'</div>';
+};
+Sim.prototype.renderControls=function(){
+  const self=this,cfg=this.cfg;this.ctrl.innerHTML='';
+  const mk=function(label,cls,fn){const b=document.createElement('button');b.className='btn '+(cls||'');b.innerHTML=label;b.onclick=fn;self.ctrl.appendChild(b);return b;};
+  (cfg.buttons||[]).forEach(function(bd){
+    if(bd.insert){
+      const b=mk(bd.label,'primary',function(){
+        if(self.protein)return;self.protein=bd.insert;self.drawMem(true);b.innerHTML=bd.done;b.disabled=true;self.say(bd.msg,'good');
+      });
+      if(self.protein===bd.insert){b.innerHTML=bd.done;b.disabled=true;}
+    }
+    if(bd.atp){
+      mk('⚡ Attach ATP to pump','energy',function(){
+        if(!self.protein){self.say('Insert the active transport pump into the membrane first.','warn');return;}
+        if(self.atp){self.say('The pump is already powered. Click a Na⁺ ion <b>inside</b> the cell.','info');return;}
+        self.atp=true;self.drawMem(false);self.say('ATP attached! ⚡ The pump is energized. Now click a Na⁺ ion <b>inside</b> the cell.','good');
+      });
+    }
+    if(bd.custom){const b=mk(bd.label,bd.cls||'',function(){bd.custom(self,b);});if(bd.isOn&&bd.isOn(self))b.classList.add('on');}
+  });
+  mk('⬇ Move one INTO the cell','',()=>this.moveRandom('out'));
+  mk('⬆ Move one OUT of the cell','',()=>this.moveRandom('in'));
+  mk('↺ Reset','ghost',()=>this.reset());
+};
+Sim.prototype.moveRandom=function(side){
+  const c=this.mols.filter(m=>m.side===side&&!m.anim);
+  if(!c.length){this.say('There are no '+this.L()+' particles '+sideName(side)+' to move right now.','warn');return;}
+  this.handle(c[Math.floor(Math.random()*c.length)]);
+};
+function tick(now){for(const s of SIMS){if(s.visible())s.step(now);}requestAnimationFrame(tick);}
+requestAnimationFrame(tick);
+
+/* ---------- rules ---------- */
+function passiveRule(o){
+  o=o||{};
+  return function(m,sim){
+    const c=sim.counts(),from=m.side,to=from==='out'?'in':'out',L=sim.L();
+    if(o.needs&&!sim.protein)return{action:'bounce',msg:o.blockMsg,type:'warn'};
+    if(sim.atEq())return{action:'deny',type:'info',msg:'⚖️ <b>Dynamic equilibrium!</b> The concentrations are balanced, so there is no more <em>net</em> movement. Particles still cross in <b>both</b> directions at the same rate. Watch them swap places!'};
+    if(c[from]<c[to])return{action:'deny',type:'warn',msg:'✋ Not that one! There are <b>fewer</b> '+L+' '+sideName(from)+' ('+c[from]+') than '+sideName(to)+' ('+c[to]+'). In passive transport, the <b>net</b> movement goes from <b>HIGH → LOW</b> concentration. Pick one from the other side.'};
+    return{action:'cross',via:o.needs?'protein':'bilayer'};
+  };
+}
+function passiveProgress(sim){
+  const c=sim.counts();return '✅ '+sim.L()+' moved from high to low concentration. <b>Outside: '+c.out+' · Inside: '+c.in+'.</b> Keep going until it’s balanced.';
+}
+function eqSuccess(extra){
+  return function(sim){const c=sim.counts();
+    return '🎉 <b>Dynamic equilibrium reached!</b> '+c.out+' outside and '+c.in+' inside'+(c.out!==c.in?' (as balanced as an odd number can get)':'')+'. '+(extra||'')+' Notice the particles keep crossing both ways, but the numbers stay the same.';};
+}
+
+/* ---------- questions ---------- */
+const DIR=['High → Low','Low → High'],YN=['Yes','No'],SZ=['Small','Large'],POL=['Polar','Nonpolar'];
+const QREG=[];
+const QS={
+  p1pre:[
+    {id:'p1_size',text:'Is O₂ small or large?',opts:SZ,ans:'Small',why:'O₂ is just two oxygen atoms. Tiny!',hint:'Check the reference table.'},
+    {id:'p1_pol',text:'Is O₂ polar or nonpolar?',opts:POL,ans:'Nonpolar',why:'O₂ has no charged ends, so it slips right between the nonpolar tails.',hint:'Two identical atoms share electrons equally.'}],
+  p1post:[
+    {id:'p1_out',type:'num',text:'How many oxygen molecules are outside now?',ans:5,hint:'Look at the counter next to your model at equilibrium.'},
+    {id:'p1_in',type:'num',text:'How many are inside?',ans:5,hint:'Look at the counter next to your model at equilibrium.'},
+    {id:'p1_dir',text:'In which direction did the net movement of oxygen occur?',opts:DIR,ans:'High → Low',why:'Oxygen spread from where there was more (outside) to where there was less (inside).',hint:'Where did you start with more oxygen?'},
+    {id:'p1_atp',text:'Does this require the cell to spend energy?',opts:YN,ans:'No',why:'Diffusion is passive transport. No ATP needed.',hint:'Did you ever need ATP in this simulation?'}],
+  co2pre:[
+    {id:'co2_size',text:'Is CO₂ small or large?',opts:SZ,ans:'Small',why:'Only three atoms.',hint:'Check the reference table.'},
+    {id:'co2_pol',text:'Is CO₂ polar or nonpolar?',opts:POL,ans:'Nonpolar',why:'CO₂ is symmetrical, so it is nonpolar and crosses the bilayer easily.',hint:'Check the reference table.'}],
+  co2post:[
+    {id:'co2_dir',text:'In which direction did the net movement of carbon dioxide occur?',opts:DIR,ans:'High → Low',why:'CO₂ moved from high (inside) to low (outside).',hint:'Where did you put more CO₂ at the start?'},
+    {id:'co2_atp',text:'Does this require the cell to spend energy?',opts:YN,ans:'No',why:'Still simple diffusion, so it is passive.',hint:'Is this passive or active?'}],
+  p2pre:[
+    {id:'p2_size',text:'Is H₂O small or large?',opts:SZ,ans:'Small',why:'Water is a small molecule.',hint:'Check the reference table.'},
+    {id:'p2_pol',text:'Is H₂O polar or nonpolar?',opts:POL,ans:'Polar',why:'Water has a slightly negative oxygen end and slightly positive hydrogen ends.',hint:'Check the reference table.'}],
+  p2post:[
+    {id:'p2_name',type:'word',text:'This type of diffusion of water across a selectively permeable membrane has a special name, called…',ans:'osmosis',hint:'Look back at the background reading.'},
+    {id:'p2_why',type:'free',text:'Explain why osmosis requires special protein channels (aquaporins).',hint:'Think about what the middle of the bilayer is made of, and whether water is polar or nonpolar.'},
+    {id:'p2_dir',text:'In which direction did the net movement of water occur?',opts:DIR,ans:'High → Low',why:'Water moved from high water concentration (outside) to low (inside).',hint:'Where was there more water at the start?'},
+    {id:'p2_atp',text:'Does this require the cell to spend energy?',opts:YN,ans:'No',why:'Osmosis is passive. Aquaporins are just open doors.',hint:'Did the aquaporin need ATP?'}],
+  p3pre:[
+    {id:'p3_size',text:'Is glucose small or large?',opts:SZ,ans:'Large',why:'Glucose (C₆H₁₂O₆) has 24 atoms. Much bigger than O₂.',hint:'Check the reference table.'},
+    {id:'p3_pol',text:'Is glucose polar or nonpolar?',opts:POL,ans:'Polar',why:'Glucose has many –OH groups, which makes it polar.',hint:'Check the reference table.'}],
+  p3post:[
+    {id:'p3_why',type:'free',text:'Explain why glucose requires special protein channels.',hint:'Think about glucose’s size AND its polarity, and what happened when you tried to move it without a channel.'},
+    {id:'p3_dir',text:'In which direction did the net movement of glucose occur?',opts:DIR,ans:'High → Low',why:'Glucose moved down its gradient, from high (outside) to low (inside).',hint:'Where was there more glucose at the start?'},
+    {id:'p3_atp',text:'Does this require the cell to spend energy?',opts:YN,ans:'No',why:'Facilitated diffusion is still passive. The channel just provides a path.',hint:'Did the channel need ATP?'}],
+  p4pre:[
+    {id:'p4_size',text:'Is Na⁺ small or large?',opts:SZ,ans:'Small',why:'A single sodium atom (minus one electron) is tiny.',hint:'It is just one atom.'},
+    {id:'p4_pol',text:'Is Na⁺ polar or nonpolar?',opts:['Polar (charged)','Nonpolar'],ans:'Polar (charged)',why:'Na⁺ carries a full positive charge, so the nonpolar tails repel it.',hint:'What does the “+” sign tell you?'}],
+  p4mid:[
+    {id:'p4_from',text:'Passive channels only allow movement down a concentration gradient FROM…',opts:['High','Low'],ans:'High',why:'Passive transport always starts at high concentration.',hint:'Think back to Parts 1–3.'},
+    {id:'p4_to',text:'…TO',opts:['High','Low'],ans:'Low',why:'…and ends at low concentration.',hint:'Think back to Parts 1–3.'}],
+  p4post:[
+    {id:'p4_dir',text:'In which direction did the net movement of Na⁺ occur?',opts:DIR,ans:'Low → High',why:'Na⁺ went from inside (low) to outside (high): against the gradient.',hint:'Compare the counts: which side had fewer Na⁺?'},
+    {id:'p4_atp',text:'Does this require the cell to spend energy?',opts:YN,ans:'Yes',why:'Each trip through the pump used one ATP.',hint:'What did you have to attach to the pump?'},
+    {id:'p4_whyatp',type:'free',text:'Why is energy (ATP) required for this process?',hint:'Moving from low to high is like pushing a ball uphill. What does it take to do that?'}],
+  cf:[
+    {id:'cf_ans',type:'free',text:'What would happen if a protein channel was shaped wrong and the molecules that are supposed to pass through could not fit through?',hint:'What builds up on one side if particles can’t cross? What happens to the water that would normally follow them, and to the mucus?',onFill:'cf'}]
+};
+function strip(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent;}
+function isRight(q,v){
+  if(v===undefined||v===null||v==='')return null;
+  if(q.type==='num')return Number(v)===q.ans;
+  if(q.type==='word')return String(v).toLowerCase().indexOf(q.ans)>=0;
+  if(q.type==='free')return null;
+  return v===q.ans;
+}
+function renderQs(hostId,section){
+  const host=document.getElementById(hostId);
+  QS[hostId.replace('q-','')].forEach(function(q){
+    QREG.push(Object.assign({section:section},q));
+    const row=document.createElement('div');row.className='q';
+    row.innerHTML='<div class="q-text">'+q.text+'</div>';
+    const fb=document.createElement('div');fb.className='fb';
+    const show=function(v){
+      const r=isRight(q,v);
+      if(r===null){fb.textContent='';fb.className='fb';return;}
+      fb.className='fb '+(r?'right':'wrong');
+      fb.innerHTML=r?'✓ '+(q.why||'Correct!'):'✗ Not quite. '+(q.hint||'Look back at the simulation.');
+    };
+    if(q.type==='free'){
+      const ta=document.createElement('textarea');ta.placeholder='Type your answer in complete sentences…';ta.value=STATE.a[q.id]||'';
+      ta.addEventListener('input',function(){STATE.a[q.id]=ta.value;save();if(q.onFill&&ta.value.trim().length>15)markDone(q.onFill);});
+      row.appendChild(ta);
+      const hb=document.createElement('button');hb.className='hint-btn';hb.textContent='💡 Need a hint?';
+      const hint=document.createElement('div');hint.className='hint';hint.textContent=q.hint;
+      hb.onclick=()=>hint.classList.toggle('show');
+      row.appendChild(hb);row.appendChild(hint);
+    }else if(q.type==='num'||q.type==='word'){
+      const inp=document.createElement('input');inp.type=q.type==='num'?'number':'text';inp.value=STATE.a[q.id]||'';
+      if(q.type==='word')inp.placeholder='Type the word';
+      const upd=function(){STATE.a[q.id]=inp.value;save();const r=isRight(q,inp.value);inp.className=r===null?'':(r?'right':'wrong');show(inp.value);};
+      inp.addEventListener(q.type==='num'?'input':'change',upd);
+      if(q.type==='word')inp.addEventListener('keydown',e=>{if(e.key==='Enter')upd();});
+      row.appendChild(inp);
+      if(inp.value)upd();
+    }else{
+      const opts=document.createElement('div');opts.className='opts';
+      q.opts.forEach(function(o){
+        const b=document.createElement('button');b.className='opt';b.textContent=o;
+        b.onclick=function(){STATE.a[q.id]=o;save();paint();};
+        opts.appendChild(b);
+      });
+      const paint=function(){
+        const v=STATE.a[q.id];
+        Array.from(opts.children).forEach(function(b){
+          b.className='opt';if(b.textContent===v){b.classList.add('sel',v===q.ans?'right':'wrong');}
+        });
+        show(v);
+      };
+      row.appendChild(opts);paint();
+    }
+    row.appendChild(fb);host.appendChild(row);
+  });
+}
+
+/* ---------- setup labeling ---------- */
+const LABELS=[
+  {id:'polar',text:'Polar head',zone:'heads'},
+  {id:'nonpolar',text:'Nonpolar tails',zone:'tails'},
+  {id:'inside',text:'Inside the cell',zone:'inside'},
+  {id:'outside',text:'Outside the cell',zone:'outside'},
+  {id:'attract',text:'Attracted to water',zone:'heads'},
+  {id:'repel',text:'Repels water',zone:'tails'},
+  {id:'vessel',text:'Blood vessel',zone:'outside'}
+];
+const ZONES=[
+  {id:'outside',g:'outside',x:14,y:46,w:772,h:122},
+  {id:'headsOut',g:'heads',x:14,y:MT-2,w:772,h:20},
+  {id:'tails',g:'tails',x:14,y:MT+21,w:772,h:38},
+  {id:'headsIn',g:'heads',x:14,y:MB-18,w:772,h:20},
+  {id:'inside',g:'inside',x:14,y:MB+12,w:772,h:146}
+];
+let SEL=null,setupSvg,pillG,vesselG;
+function zoneGroup(zid){const z=ZONES.find(z=>z.id===zid);return z?z.g:null;}
+function buildSetup(){
+  const host=$('#setupStage');
+  setupSvg=el('svg',{viewBox:'0 0 '+W+' '+H,class:'setup-svg',role:'img','aria-label':'Phospholipid bilayer diagram with drop zones for labels'},host);
+  const bg=el('g',{},setupSvg);drawBackdrop(bg,{vessel:false,labels:false});
+  vesselG=el('g',{},setupSvg);
+  const mem=el('g',{},setupSvg);drawMembrane(mem,null);
+  const zg=el('g',{},setupSvg);pillG=el('g',{},setupSvg);
+  ZONES.forEach(function(z){
+    const r=el('rect',{x:z.x,y:z.y,width:z.w,height:z.h,rx:10,class:'zone'},zg);
+    r.addEventListener('click',function(){if(SEL)placeLabel(SEL,z.id);else setMsg('Tap a label card above first, then tap where it goes.','info');});
+    r.addEventListener('dragover',function(e){e.preventDefault();r.classList.add('over');});
+    r.addEventListener('dragleave',function(){r.classList.remove('over');});
+    r.addEventListener('drop',function(e){e.preventDefault();r.classList.remove('over');const id=e.dataTransfer.getData('text/plain');if(id)placeLabel(id,z.id);});
+  });
+  $('#checkSetup').onclick=checkSetup;
+  $('#resetSetup').onclick=function(){STATE.setup={};STATE.setupChecked=false;SEL=null;save();renderSetup();setMsg('Labels cleared.','info');};
+  renderSetup();
+  if(STATE.setupOK)$('#stamp').classList.add('show');
+}
+function setMsg(m,t){const e=$('#setupMsg');e.className='sim-msg '+(t||'info');e.innerHTML=m;}
+function placeLabel(id,zid){STATE.setup[id]=zid;SEL=null;STATE.setupChecked=false;save();renderSetup();}
+function renderSetup(){
+  const bank=$('#bank');bank.innerHTML='';
+  const unplaced=LABELS.filter(l=>!STATE.setup[l.id]);
+  if(!unplaced.length)bank.innerHTML='<span class="bank-empty">All labels placed. Click “Check my setup.”</span>';
+  unplaced.forEach(function(l){
+    const b=document.createElement('button');b.className='lbl'+(l.id==='vessel'?' vessel':'')+(SEL===l.id?' sel':'');b.textContent=l.text;b.draggable=true;
+    b.onclick=function(){SEL=SEL===l.id?null:l.id;renderSetup();};
+    b.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',l.id);});
+    bank.appendChild(b);
+  });
+  setupSvg.classList.toggle('zones-armed',!!SEL);
+  pillG.innerHTML='';vesselG.innerHTML='';
+  if(STATE.setup.vessel==='outside')drawVessel(vesselG);
+  ZONES.forEach(function(z){
+    let x=z.x+16;const cy=z.y+z.h/2;
+    LABELS.filter(l=>STATE.setup[l.id]===z.id).forEach(function(l){
+      const w=l.text.length*7.6+28;
+      const wrong=STATE.setupChecked&&l.zone!==z.g;
+      const right=STATE.setupChecked&&l.zone===z.g;
+      const g=el('g',{class:'pill',tabindex:0,role:'button','aria-label':l.text+' (tap to remove)'},pillG);
+      el('rect',{x:x,y:cy-13,width:w,height:26,rx:13,fill:wrong?'#fee2e2':right?'#dcfce7':(l.id==='vessel'?'#fde4ea':'#fff'),stroke:wrong?'#dc2626':right?'#16a34a':'#334155','stroke-width':1.8},g);
+      txt(g,x+w/2,cy+1,(wrong?'✗ ':right?'✓ ':'')+l.text,{'text-anchor':'middle','dominant-baseline':'central','font-size':13,'font-weight':600,fill:'#1b2433','font-family':'Lexend,system-ui,sans-serif'});
+      const rm=function(){delete STATE.setup[l.id];STATE.setupChecked=false;STATE.setupOK=false;$('#stamp').classList.remove('show');save();renderSetup();};
+      g.addEventListener('click',function(e){e.stopPropagation();rm();});
+      g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();rm();}});
+      x+=w+10;
+    });
+  });
+}
+function checkSetup(){
+  const placed=LABELS.filter(l=>STATE.setup[l.id]).length;
+  if(placed<LABELS.length){setMsg('Place all '+LABELS.length+' labels first ('+placed+' of '+LABELS.length+' placed).','warn');return;}
+  STATE.setupChecked=true;
+  const wrong=LABELS.filter(l=>zoneGroup(STATE.setup[l.id])!==l.zone);
+  if(!wrong.length){STATE.setupOK=true;markDone('setup');setMsg('All 7 labels are correct!','good');$('#stamp').classList.add('show');}
+  else{
+    STATE.setupOK=false;$('#stamp').classList.remove('show');
+    setMsg('<b>'+(LABELS.length-wrong.length)+' of '+LABELS.length+' correct.</b> The red labels are in the wrong place. Tap one to pick it back up. <br><span class="muted">Hint: the heads are <b>hydrophilic</b> (“water-loving”). The tails are <b>hydrophobic</b> (“water-fearing”). Nutrients arrive from the blood.</span>','warn');
+  }
+  save();renderSetup();
+}
+
+/* ---------- conclusion table ---------- */
+const PROT=['None needed','Aquaporin','Channel protein (passive)','Protein pump'];
+const ROWS=[
+  {k:'diff',name:'Diffusion',prot:'None needed',dir:'High → Low',atp:'No'},
+  {k:'osmo',name:'Osmosis',prot:'Aquaporin',dir:'High → Low',atp:'No'},
+  {k:'fac',name:'Facilitated diffusion',prot:'Channel protein (passive)',dir:'High → Low',atp:'No'},
+  {k:'act',name:'Active transport',prot:'Protein pump',dir:'Low → High',atp:'Yes'}
+];
+function buildTable(){
+  const t=$('#conclTable');
+  t.innerHTML='<tr><th>Type of movement</th><th>Molecules that pass through this way</th><th>Type of protein channel needed</th><th>Why a protein channel is (or isn’t) needed</th><th>Net movement</th><th>Requires energy?</th></tr>';
+  ROWS.forEach(function(r){
+    const tr=document.createElement('tr');
+    const td=function(){const d=document.createElement('td');tr.appendChild(d);return d;};
+    td().textContent=r.name;
+    const mkText=function(id,area,ph,label){
+      QREG.push({section:'conclusion',id:id,type:'free',text:r.name+': '+label});
+      const i=document.createElement(area?'textarea':'input');if(!area)i.type='text';i.placeholder=ph;i.value=STATE.a[id]||'';i.setAttribute('aria-label',r.name+' '+label);
+      i.addEventListener('input',function(){STATE.a[id]=i.value;save();});td().appendChild(i);
+    };
+    const mkSel=function(id,opts,ans,label){
+      QREG.push({section:'conclusion',id:id,opts:opts,ans:ans,text:r.name+': '+label});
+      const s=document.createElement('select');s.setAttribute('aria-label',r.name+' '+label);
+      s.innerHTML='<option value="">Choose…</option>'+opts.map(o=>'<option>'+o+'</option>').join('');
+      s.value=STATE.a[id]||'';
+      const paint=function(){s.className=s.value?(s.value===ans?'right':'wrong'):'';};
+      s.addEventListener('change',function(){STATE.a[id]=s.value;save();paint();checkTable();});
+      paint();td().appendChild(s);
+    };
+    mkText('t_'+r.k+'_mol',false,'Which molecules?','molecules');
+    mkSel('t_'+r.k+'_prot',PROT,r.prot,'protein needed');
+    mkText('t_'+r.k+'_why',true,'Explain…','why a protein is or isn’t needed');
+    mkSel('t_'+r.k+'_dir',DIR,r.dir,'net movement');
+    mkSel('t_'+r.k+'_atp',YN,r.atp,'requires energy');
+    t.appendChild(tr);
+  });
+  checkTable();
+}
+function checkTable(){
+  let right=0,total=0,filled=0;
+  ROWS.forEach(function(r){[['prot',r.prot],['dir',r.dir],['atp',r.atp]].forEach(function(p){total++;const v=STATE.a['t_'+r.k+'_'+p[0]];if(v)filled++;if(v===p[1])right++;});});
+  const m=$('#conclMsg');
+  if(right===total){m.className='sim-msg good';m.innerHTML='🎉 All dropdowns correct! Make sure your “molecules” and “why” columns are filled in too.';markDone('conclusion');}
+  else if(filled===total){m.className='sim-msg warn';m.innerHTML=right+' of '+total+' dropdowns correct. Red ones need another look. Use your simulations to check!';}
+  else{m.className='sim-msg';m.innerHTML=right+' of '+total+' dropdowns correct so far.';}
+}
+
+/* ---------- build simulations ---------- */
+function buildSims(){
+  new Sim($('#sim-p1'),{id:'p1',species:'o2',out:8,in:2,dynamic:true,
+    rule:passiveRule({needs:false}),goal:s=>s.atEq(),progress:passiveProgress,
+    success:eqSuccess('Oxygen slipped straight through the phospholipids. No protein needed!'),
+    intro:'👆 Click an O₂ molecule to move it across the membrane, one at a time.',
+    beforeTitle:'Before diffusion of oxygen',afterTitle:'After diffusion of oxygen',aria:'Oxygen diffusion simulation'});
+
+  const co2in=$('#co2in'),co2out=$('#co2out');let co2sim=null;
+  co2in.value=STATE.co2.in;co2out.value=STATE.co2.out;
+  const co2save=function(){STATE.co2={in:co2in.value,out:co2out.value};save();};
+  co2in.addEventListener('input',function(){if(co2in.value!==''&&+co2in.value>=0&&+co2in.value<=10)co2out.value=10-co2in.value;co2save();});
+  co2out.addEventListener('input',co2save);
+  const co2m=$('#co2msg');
+  $('#co2build').onclick=function(){
+    const i=parseInt(co2in.value,10),o=parseInt(co2out.value,10);
+    const say=(m,t)=>{co2m.className='sim-msg '+t;co2m.innerHTML=m;};
+    if(isNaN(i)||isNaN(o)){say('Fill in both numbers first.','warn');return;}
+    if(i<0||o<0){say('You can’t have a negative number of molecules!','warn');return;}
+    if(i+o!==10){say('Your numbers add up to '+(i+o)+'. There should be <b>10</b> CO₂ molecules total.','warn');return;}
+    if(i<=o){say('Hmm. CO₂ needs to move <b>out</b> of the cell by diffusion. For that to happen, which side needs the <b>higher</b> concentration at the start? Try again.','warn');return;}
+    say('✅ Great model: '+i+' inside, '+o+' outside. CO₂ is at a higher concentration inside, so it will diffuse out. Now run it below!','good');
+    if(!co2sim){
+      co2sim=new Sim($('#sim-co2'),{id:'co2',species:'co2',out:o,in:i,dynamic:true,
+        rule:passiveRule({needs:false}),goal:s=>s.atEq(),progress:passiveProgress,
+        success:eqSuccess('CO₂ diffused out of the cell, straight through the bilayer.'),
+        intro:'👆 Click CO₂ molecules to move them across the membrane until you reach dynamic equilibrium.',
+        beforeTitle:'Before diffusion of carbon dioxide',afterTitle:'After diffusion of carbon dioxide',aria:'Carbon dioxide diffusion simulation'});
+    }else{co2sim.cfg.out=o;co2sim.cfg.in=i;co2sim.reset();}
+  };
+
+  new Sim($('#sim-p2'),{id:'p2',species:'h2o',out:10,in:3,dynamic:true,
+    rule:passiveRule({needs:true,blockMsg:'💧 Water is <b>polar</b>, so the <b>hydrophobic tails</b> in the middle of the bilayer block most of it. Only a slow trickle could slip through. <b>Insert an aquaporin</b> to give water its own channel!'}),
+    goal:s=>s.atEq(),progress:passiveProgress,
+    success:eqSuccess('Water moved through the aquaporin by <b>osmosis</b>.'),
+    buttons:[{insert:'aquaporin',label:'＋ Insert Aquaporin',done:'Aquaporin inserted ✓',msg:'Aquaporin inserted! Now click water molecules to move them through the channel, from high to low water concentration.'}],
+    intro:'👆 Try clicking a water molecule. What happens without a channel?',
+    beforeTitle:'Before osmosis',afterTitle:'After osmosis',aria:'Osmosis simulation'});
+
+  new Sim($('#sim-p3'),{id:'p3',species:'glu',out:6,in:1,dynamic:true,
+    rule:passiveRule({needs:true,blockMsg:'🚫 Glucose is too <b>large</b> (and <b>polar</b>) to squeeze between the phospholipids. <b>Place a passive transport channel</b> for glucose.'}),
+    goal:s=>s.atEq(),progress:passiveProgress,
+    success:eqSuccess('Glucose used the channel protein to move down its gradient. That’s <b>facilitated diffusion</b>, and it needed no ATP.'),
+    buttons:[{insert:'glucose',label:'＋ Insert Passive Glucose Channel',done:'Glucose channel inserted ✓',msg:'Channel inserted! Click glucose molecules to move them through it, down the concentration gradient.'}],
+    intro:'👆 Try clicking a glucose molecule. Can it get through on its own?',
+    beforeTitle:'Before facilitated diffusion',afterTitle:'After facilitated diffusion',aria:'Facilitated diffusion simulation'});
+
+  new Sim($('#sim-p4'),{id:'p4',species:'na',out:6,in:3,dynamic:false,
+    rule:function(m,s){
+      if(!s.protein)return{action:'bounce',msg:'⚡ Na⁺ is a <b>charged</b> ion. The hydrophobic tails repel it, so it can’t cross the bilayer. <b>Insert the active transport pump.</b>'};
+      if(m.side==='out')return{action:'deny',msg:'↩ This pump moves Na⁺ <b>OUT</b> of the cell. Click an ion <b>inside</b> the cell.'};
+      if(!s.atp)return{action:'deny',msg:'🔋 The pump is in place, but it has <b>no energy</b>! Click <b>⚡ Attach ATP to pump</b> first.'};
+      return{action:'cross',via:'protein'};
+    },
+    onCross:function(s){s.atp=false;s.pumped++;s.drawMem(false);s.fx(468,MB+48,'ATP → ADP','#a16207');},
+    goal:s=>s.pumped>=2,
+    progress:function(s){const c=s.counts();return '✅ Pumped 1 Na⁺ out using 1 ATP. Outside: <b>'+c.out+'</b> (high) · Inside: <b>'+c.in+'</b> (low). The ATP is used up, so attach another ⚡ to pump again.';},
+    success:function(s){const c=s.counts();return '🎉 <b>You pumped 2 Na⁺ ions out of the cell!</b> Now there are '+c.out+' outside (HIGH) and '+c.in+' inside (LOW). The ions moved from <b>LOW → HIGH</b> concentration, against the gradient, and it cost <b>'+s.pumped+' ATP</b>.';},
+    meterNote:function(s){const c=s.counts();return 'Gradient: <b>HIGH outside, LOW inside</b><br>ATP used: <b>'+s.pumped+'</b>'+(s.atp?' · ⚡ pump powered':'');},
+    buttons:[{insert:'pump',label:'＋ Insert Active Transport Pump',done:'Pump inserted ✓',msg:'Pump inserted! It needs energy to work. Click <b>⚡ Attach ATP to pump</b>.'},{atp:true}],
+    intro:'👆 Try clicking a Na⁺ ion inside the cell. Then insert the pump and power it with ATP.',
+    beforeTitle:'Before active transport',afterTitle:'After active transport',aria:'Active transport simulation'});
+
+  const cfRule=function(m,s){
+    if(s.protein==='cftrBad'){
+      if(m.side==='out')return{action:'deny',msg:'Chloride needs to leave the cell. Click a Cl⁻ ion <b>inside</b> the cell.'};
+      return{action:'bounce',at:'protein',msg:'🚫 The misfolded CFTR channel is the <b>wrong shape</b>. Cl⁻ can’t fit through! Chloride gets trapped inside, so water doesn’t follow it out, and the mucus stays thick and sticky.'};
+    }
+    return passiveRule({needs:true})(m,s);
+  };
+  const cfDraw=function(s){
+    const g=s.extraG;g.innerHTML='';const c=s.counts();
+    const th=s.protein==='cftrBad'?96:clamp(90-c.out*11,26,90);
+    el('path',{d:'M0 6 L800 6 L800 '+(6+th)+' Q 700 '+(14+th)+' 600 '+(4+th)+' T 400 '+(6+th)+' T 200 '+(4+th)+' T 0 '+(8+th)+' Z',fill:'#9bc53d',opacity:.45},g);
+    txt(g,16,26,s.protein==='cftrBad'||th>60?'Mucus: thick & sticky':'Mucus: thin & watery',{'font-size':13,'font-weight':600,fill:'#3f6212','font-family':'Lexend,system-ui,sans-serif'});
+  };
+  new Sim($('#sim-cf'),{id:'cfsim',species:'cl',out:2,in:8,dynamic:true,vessel:false,outLabel:'OUTSIDE THE CELL (airway)',proteinStart:'cftr',
+    rule:cfRule,onDraw:cfDraw,goal:s=>s.protein==='cftr'&&s.atEq(),progress:function(s){const c=s.counts();return '✅ Cl⁻ left through the healthy channel. Water follows it out by osmosis, so the mucus gets thinner. Outside: '+c.out+' · Inside: '+c.in+'.';},
+    success:function(){return '🎉 With a <b>healthy</b> CFTR channel, chloride flows out, water follows, and the mucus stays thin. Now click <b>Misfolded channel</b> and try again.';},
+    buttons:[
+      {label:'✔ Healthy channel',isOn:s=>s.protein==='cftr',custom:function(s){s.cfg.proteinStart='cftr';s.reset();}},
+      {label:'✖ Misfolded channel',cls:'danger',isOn:s=>s.protein==='cftrBad',custom:function(s){s.cfg.proteinStart='cftrBad';s.reset();s.say('Now the CFTR channel is misfolded. Try moving Cl⁻ out of the cell.','warn');}}
+    ],
+    intro:'👆 Click chloride ions (Cl⁻) inside the cell to move them out through the CFTR channel.',
+    beforeTitle:'Start',afterTitle:'After chloride moves (healthy channel)',aria:'Cystic fibrosis CFTR channel simulation'});
+}
+
+/* ---------- navigation ---------- */
+const SECTIONS=$$('section.part');
+const DONE_MAP={setup:['setup'],diffusion:['p1','co2'],osmosis:['p2'],facilitated:['p3'],active:['p4'],conclusion:['conclusion'],cf:['cf']};
+function buildTabs(){
+  const t=$('#tabs');
+  SECTIONS.forEach(function(s){
+    const b=document.createElement('button');b.className='tab';b.dataset.sec=s.id;
+    b.innerHTML='<span class="tick">✓</span>'+s.dataset.title;b.onclick=()=>go(s.id);t.appendChild(b);
+  });
+  $$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+  updateNav();
+}
+function go(id,noScroll){
+  if(!document.getElementById(id))id='setup';
+  SECTIONS.forEach(s=>s.classList.toggle('active',s.id===id));
+  $$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.sec===id));
+  if(location.hash!=='#'+id){try{history.replaceState(null,'','#'+id);}catch(e){location.hash=id;}}
+  if(!noScroll)window.scrollTo({top:0,behavior:'smooth'});
+}
+function markDone(k){if(!STATE.done[k]){STATE.done[k]=true;save();updateNav();}}
+function updateNav(){$$('.tab').forEach(b=>{const req=DONE_MAP[b.dataset.sec]||[];b.classList.toggle('done',req.length&&req.every(k=>STATE.done[k]));});}
+window.addEventListener('hashchange',()=>go(location.hash.slice(1),true));
+
+/* ---------- modals & report ---------- */
+function openModal(id){$(id).classList.add('show');}
+$$('.modal').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m||e.target.hasAttribute('data-close'))m.classList.remove('show');});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal').forEach(m=>m.classList.remove('show'));});
+$('#openRef').onclick=()=>openModal('#refModal');
+document.addEventListener('click',e=>{if(e.target.closest('[data-ref]'))openModal('#refModal');});
+function buildReport(){
+  const L=[];
+  L.push('MODELING CELL MEMBRANE TRANSPORT: SIMULATOR ANSWERS');
+  L.push('Name: '+(STATE.name||'(no name entered)'));
+  L.push('Date: '+new Date().toLocaleDateString());
+  L.push('');
+  L.push('SETUP: '+(STATE.setupOK?'Approved ✓ (all labels correct)':'Not finished'));
+  const secs=[['diffusion','PART 1: SIMPLE DIFFUSION',['p1','co2']],['osmosis','PART 2: OSMOSIS',['p2']],['facilitated','PART 3: FACILITATED DIFFUSION',['p3']],['active','PART 4: ACTIVE TRANSPORT',['p4']],['conclusion','CONCLUSION TABLE',[]],['cf','CYSTIC FIBROSIS CONNECTION',[]]];
+  secs.forEach(function(s){
+    L.push('');L.push(s[1]);
+    if(s[2].length)L.push('  Simulation(s) completed: '+(s[2].every(k=>STATE.done[k])?'Yes':'No'));
+    if(s[0]==='diffusion')L.push('  CO₂ model before diffusion: '+(STATE.co2.in||'__')+' inside, '+(STATE.co2.out||'__')+' outside');
+    QREG.filter(q=>q.section===s[0]).forEach(function(q){
+      const v=STATE.a[q.id];const r=isRight(q,v);
+      L.push('  • '+strip(q.text)+' '+((v===undefined||v==='')?'(blank)':String(v).trim())+(r===null?'':(r?'  ✓':'  ✗')));
+    });
+  });
+  return L.join('\n');
+}
+function openReport(){$('#reportText').value=buildReport();$('#copyStatus').textContent='';openModal('#reportModal');}
+$('#openReport').onclick=openReport;$('#finishBtn').onclick=openReport;
+$('#copyBtn').onclick=function(){
+  const ta=$('#reportText');
+  const ok=()=>{$('#copyStatus').textContent='✓ Copied! Now paste it into your assignment.';};
+  const fallback=()=>{ta.focus();ta.select();let done=false;try{done=document.execCommand('copy');}catch(e){}
+    if(done)ok();else $('#copyStatus').textContent='Press Ctrl+C (or ⌘+C) to copy the selected text.';};
+  try{navigator.clipboard.writeText(ta.value).then(ok,fallback);}catch(e){fallback();}
+};
+
+/* ---------- init ---------- */
+const nameIn=$('#studentName');nameIn.value=STATE.name||'';
+nameIn.addEventListener('input',()=>{STATE.name=nameIn.value;save();});
+['p1pre','p1post','co2pre','co2post'].forEach(k=>renderQs('q-'+k,'diffusion'));
+['p2pre','p2post'].forEach(k=>renderQs('q-'+k,'osmosis'));
+['p3pre','p3post'].forEach(k=>renderQs('q-'+k,'facilitated'));
+['p4pre','p4mid','p4post'].forEach(k=>renderQs('q-'+k,'active'));
+buildTable();
+renderQs('q-cf','cf');
+buildTabs();
+go(location.hash.slice(1)||'setup',true);
+buildSetup();
+buildSims();
+})();
+</script>
+</body>
+</html>
